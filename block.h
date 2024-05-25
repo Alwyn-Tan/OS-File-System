@@ -73,12 +73,14 @@ struct DIRECTORY_BLOCK
 	DIRECTORY directory[50];
 };
 
-
-
 DIRECTORY_BLOCK* newDirectory();
-
-void createRoot();
-
 void format();
 
+void createRootDirectory();
+
+int createDirectoryCheck(char dir[]);
+
+void checkAndCreateFile(char* name, int size, char* filecontent);
+
+void createFile(int& p, char* token, double size, char* filecontent);
 #endif
