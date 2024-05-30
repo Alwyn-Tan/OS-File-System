@@ -1,4 +1,5 @@
 #pragma once
+#pragma once
 #include<ctime>
 #include<string.h>
 #ifndef  __BLOCK_H__ 
@@ -80,7 +81,24 @@ void createRootDirectory();
 
 int createDirectoryCheck(char dir[]);
 
-void checkAndCreateFile(char* name, int size, char* filecontent);
+void checkAndCreateFile(const char* name, int size, char* filecontent);
 
-void createFile(int& p, char* token, double size, char* filecontent);
+void createFile(int& p, const char* token, double size, char* filecontent);
+
+int findFile_INode(long p, char name[]);
+
+int findFreeINode();
+
+void make_Dir(long& p, char* token);
+
+int findFreeDataBlock();
+
+void assign_INode(int I);
+
+bool deleteFileHelp(int& p, int i);
+
+INDIRECT_ADDR_BLOCK* newINDIR_Addr();
+
+void make_inDir(INDIRECT_ADDR_BLOCK* p, char* filecontent, int& totalBlocks, int& used_Blocks);
+
 #endif
