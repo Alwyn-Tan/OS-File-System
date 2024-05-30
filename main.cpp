@@ -1,8 +1,10 @@
 #include"block.h"
+#include <string.h>
+#pragma warning( disable : 4996)
 using namespace std;
 
 
-int main(){
+int main() {
 	format();
 	createRootDirectory();
 	char* content = new char[1024];

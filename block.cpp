@@ -1,5 +1,7 @@
 ﻿#include <iostream>
 #include "block.h"
+#include <string.h>
+#pragma warning( disable : 4996)
 using namespace std;
 int systemUsed = 1642;
 int directoryMaxNum = 50;
@@ -92,11 +94,11 @@ void createRootDirectory()
 
 int findFreeDataBlock()
 {
-	for(int i=0;i<disk[1].super_block->total_data_block;i++)
+	for (int i = 0; i < disk[1].super_block->total_data_block; i++)
 	{
-		if(disk[3].data_bit_map->data_bit_map[i]==false)
+		if (disk[3].data_bit_map->data_bit_map[i] == false)
 		{
-			return i+systemUsed;
+			return i + systemUsed;
 		}
 	}
 }
@@ -105,41 +107,41 @@ void assign_INode(int I)
 {
 	time_t t;
 	time(&t);
-	disk[I].i_node->create_time =disk[I].i_node->access_time= disk[I].i_node->modification_time=t;
-	disk[I].i_node->uid =disk[0].boot_block->current_user;
-	disk[I].i_node->current_size=0;
+	disk[I].i_node->create_time = disk[I].i_node->access_time = disk[I].i_node->modification_time = t;
+	disk[I].i_node->uid = disk[0].boot_block->current_user;
+	disk[I].i_node->current_size = 0;
 	disk[I].i_node->lock = 0;
 	disk[I].i_node->shareDir = 0;
 	disk[I].i_node->read_only_flag = 0;
-	for(int i=0;i<10;i++)
+	for (int i = 0; i < 10; i++)
 	{
-		disk[I].i_node->direct_addr[i]=0;
+		disk[I].i_node->direct_addr[i] = 0;
 	}
-	for(int i=0;i<2;i++)
+	for (int i = 0; i < 2; i++)
 	{
-		disk[I].i_node->indirect_addr[i]=0;
+		disk[I].i_node->indirect_addr[i] = 0;
 	}
 }
 
-void make_Dir(long &p, char* token)
+void make_Dir(long& p, char* token)
 {
-	for(int i=0;i<50;i++)
+	for (int i = 0; i < 50; i++)
 	{
-		if(strlen(disk[p].Dire_Block->directory[i].name)==0)
+		if (strlen(disk[p].Dire_Block->directory[i].name) == 0)
 		{
-			strcpy(disk[p].Dire_Block->directory[i].name,token);
-			int Inode=findFreeINode();
-			disk[p].Dire_Block->directory[i].inode_number=Inode;
+			strcpy_s(disk[p].Dire_Block->directory[i].name, token);
+			int Inode = findFreeINode();
+			disk[p].Dire_Block->directory[i].inode_number = Inode;
 			assign_INode(Inode);//assign new directory with inode
-			disk[Inode].i_node->type=0;
-			disk[2].i_node_bit_map->inode_bit_map[Inode-disk[1].super_block->first_inode_block]=true;
+			disk[Inode].i_node->type = 0;
+			disk[2].i_node_bit_map->inode_bit_map[Inode - disk[1].super_block->first_inode_block] = true;
 
-			int data_p=findFreeDataBlock();//assign new directory with data block
+			int data_p = findFreeDataBlock();//assign new directory with data block
 			disk[1].super_block->free_data_block--;
-			disk[Inode].i_node->direct_addr[disk[Inode].i_node->current_size++]=data_p;
-			disk[data_p].Dire_Block=newDirectory();
-			disk[3].data_bit_map->data_bit_map[data_p-systemUsed]=true;
-			strcpy(disk[data_p].Dire_Block->name,token);
+			disk[Inode].i_node->direct_addr[disk[Inode].i_node->current_size++] = data_p;
+			disk[data_p].Dire_Block = newDirectory();
+			disk[3].data_bit_map->data_bit_map[data_p - systemUsed] = true;
+			strcpy_s(disk[data_p].Dire_Block->name, token);
 		}
 	}
 }
@@ -178,91 +180,92 @@ int createDirectoryCheck(char dir[]) // (char* = '/root/dir1/file1')
 	return pointer;
 }
 
-bool deleteFileHelp(int &p,int i)
-{   
+
+bool deleteFileHelp(int& p, int i)
+{
 	int inode;
-	inode=disk[p].Dire_Block->directory[i].inode_number ;//get the I_node of the file
+	inode = disk[p].Dire_Block->directory[i].inode_number;//get the I_node of the file
 	if (disk[inode].i_node->lock == 1)//check wheter the file is locked
 	{
-		cout << disk[p].Dire_Block->directory[i].name<<" is locked ,permission denied" << endl;
+		cout << disk[p].Dire_Block->directory[i].name << " is locked ,permission denied" << endl;
 		return false;
 	}
-	 strcpy(disk[p].Dire_Block->directory[i].name,"");
-	disk[p].Dire_Block->directory[i].inode_number =0;//在目录上清除
-	
+	strcpy_s(disk[p].Dire_Block->directory[i].name, "");
+	disk[p].Dire_Block->directory[i].inode_number = 0;//在目录上清除
+
 	if (disk[inode].i_node->shareDir != 0)//delete soft link
 	{
 		int p = disk[inode].i_node->shareDir;
 		int o = disk[inode].i_node->shareOffset;
-		strcpy(disk[p].Dire_Block->directory[o].name, "");
+		strcpy_s(disk[p].Dire_Block->directory[o].name, "");
 		disk[p].Dire_Block->directory[o].inode_number = 0;
 		return true;
 	}
 
-		int tp;//delete data
-		for(int i=0;i<10;i++)
-		{
-			tp=(int)disk[inode].i_node->direct_addr[i];
-			if(tp==0)
-				break;
-			delete disk[tp].data;
-			disk[3].data_bit_map->data_bit_map[tp-systemUsed]=false;
-			disk[1].super_block->free_data_block++;
-	
-		}
+	int tp;//delete data
+	for (int i = 0; i < 10; i++)
+	{
+		tp = (int)disk[inode].i_node->direct_addr[i];
+		if (tp == 0)
+			break;
+		delete disk[tp].data;
+		disk[3].data_bit_map->data_bit_map[tp - systemUsed] = false;
+		disk[1].super_block->free_data_block++;
 
-		tp=(int)disk[inode].i_node->indirect_addr[0];
-		int tp1;
-		if(tp!=0)
+	}
+
+	tp = (int)disk[inode].i_node->indirect_addr[0];
+	int tp1;
+	if (tp != 0)
+	{
+		for (int i = 0; i < 256; i++)
 		{
-		for(int i=0;i<256;i++)
-		{
-			tp1=(int)disk[tp].in_addr->addr;
-			if(tp1==0)
+			tp1 = (int)disk[tp].in_addr->addr;
+			if (tp1 == 0)
 				break;
 			delete disk[tp1].data;
-			disk[3].data_bit_map->data_bit_map[tp1-systemUsed]=false;
+			disk[3].data_bit_map->data_bit_map[tp1 - systemUsed] = false;
 			disk[1].super_block->free_data_block++;
 		}
-		}
-	
-		tp=(int)disk[inode].i_node->indirect_addr[1];
-		if(tp!=0)
-		{
+	}
+
+	tp = (int)disk[inode].i_node->indirect_addr[1];
+	if (tp != 0)
+	{
 		int tp2;
-		for(int i=0;i<256;i++)
+		for (int i = 0; i < 256; i++)
 		{
 			tp1 = disk[tp].in_addr->addr[i];
-			if(tp1==0)
+			if (tp1 == 0)
 				break;
-			for(int j=0;j<256;j++)
+			for (int j = 0; j < 256; j++)
 			{
-				tp2=disk[tp1].in_addr->addr[j];
-				if(tp2==0)
+				tp2 = disk[tp1].in_addr->addr[j];
+				if (tp2 == 0)
 					break;
 				delete disk[tp2].data;
-				disk[3].data_bit_map->data_bit_map[tp2-systemUsed]=false;
+				disk[3].data_bit_map->data_bit_map[tp2 - systemUsed] = false;
 				disk[1].super_block->free_data_block++;
 			}
-		 }
 		}
-		disk[2].i_node_bit_map->inode_bit_map[inode-disk[1].super_block->first_inode_block]=false;
+	}
+	disk[2].i_node_bit_map->inode_bit_map[inode - disk[1].super_block->first_inode_block] = false;
 	delete disk[inode].i_node;
-	disk[inode].i_node=new I_NODE;
+	disk[inode].i_node = new I_NODE;
 	return true;
 }
 
-void checkAndCreateFile(char* name, int size, char* filecontent) // (char* = '/root/dir1/file1')
+void checkAndCreateFile(const char* name, int size, char* filecontent) // (char* = '/root/dir1/file1')
 {
 	if (strstr(name, disk[1].super_block->usrdir) == NULL)
 	{
 		cout << "Error! User Directory does not exist!" << endl;
 		return;
 	}
-	char* filename = strrchr(name, '/');
+	const char* filename = strrchr(name, '/');
 	char dir[1024];
 	memset(dir, 0, sizeof(dir));
-	strncpy(dir, name, strlen(name) - strlen(filename));
+	strncpy(dir, name, /*strlen(name) - */ strlen(filename));
 	filename++;
 
 	int pointer;
@@ -288,53 +291,53 @@ void checkAndCreateFile(char* name, int size, char* filecontent) // (char* = '/r
 
 int findFreeINode()
 {
-	for(int i=0;i<disk[1].super_block->total_data_block;i++)
+	for (int i = 0; i < disk[1].super_block->total_data_block; i++)
 	{
-		if(disk[2].i_node_bit_map->inode_bit_map[i]==false)
+		if (disk[2].i_node_bit_map->inode_bit_map[i] == false)
 		{
-			return i+disk[1].super_block->first_inode_block;
+			return i + disk[1].super_block->first_inode_block;
 		}
 	}
 }
 
- INDIRECT_ADDR_BLOCK* newINDIR_Addr()
- {
-  INDIRECT_ADDR_BLOCK*temp = new INDIRECT_ADDR_BLOCK;
-  for(int i=0;i<256;i++)
-	  temp->addr[i]=0;
-  return temp;
- }
-
-void make_inDir(INDIRECT_ADDR_BLOCK*block, char* filecontent, int& totalBlocks, int& used_Blocks)
+INDIRECT_ADDR_BLOCK* newINDIR_Addr()
 {
-	int count =totalBlocks<256?totalBlocks:256;
+	INDIRECT_ADDR_BLOCK* temp = new INDIRECT_ADDR_BLOCK;
+	for (int i = 0; i < 256; i++)
+		temp->addr[i] = 0;
+	return temp;
+}
+
+void make_inDir(INDIRECT_ADDR_BLOCK* block, char* filecontent, int& totalBlocks, int& used_Blocks)
+{
+	int count = totalBlocks < 256 ? totalBlocks : 256;
 	int temp;
-	for(int i=0;i<count;i++)
+	for (int i = 0; i < count; i++)
 	{
-		    temp=block->addr[i] = findFreeDataBlock();
-			disk[1].super_block->free_data_block--;
-			disk[3].data_bit_map->data_bit_map[temp-systemUsed]=true;
-			disk[temp].data=new DATA_BLOCK;
-			memset(disk[temp].data->content,0,1024);
-			totalBlocks--;
-			if(used_Blocks>0)//copy the file content into the new space;
-		   {
-			   used_Blocks--;
-			    strncpy(disk[temp].data->content,filecontent,1024);
-				filecontent+=1024;
-			}
+		temp = block->addr[i] = findFreeDataBlock();
+		disk[1].super_block->free_data_block--;
+		disk[3].data_bit_map->data_bit_map[temp - systemUsed] = true;
+		disk[temp].data = new DATA_BLOCK;
+		memset(disk[temp].data->content, 0, 1024);
+		totalBlocks--;
+		if (used_Blocks > 0)//copy the file content into the new space;
+		{
+			used_Blocks--;
+			strncpy_s(disk[temp].data->content, filecontent, 1024);
+			filecontent += 1024;
+		}
 	}
 
 }
 
-void createFile(int& p, char* filename, double size, char* filecontent) 
+void createFile(int& p, const char* filename, double size, char* filecontent)
 {
-	int Inode;
+	int Inode=disk[1].super_block->first_inode_block;
 	for (int i = 0; i < directoryMaxNum; i++)//find the proper place in directory for the filename and allowcate inode 
 	{
 		if (strlen(disk[p].Dire_Block->directory[i].name) == 0)//find the first empty dir entry
 		{
-			strcpy(disk[p].Dire_Block->directory[i].name, filename);
+			strcpy_s(disk[p].Dire_Block->directory[i].name, filename);
 			Inode = findFreeINode();
 			if (Inode == -1)//not free Inode
 				return;
@@ -347,16 +350,19 @@ void createFile(int& p, char* filename, double size, char* filecontent)
 		}
 	}
 	//calculate data size, usedSpace and update inode,
-	//then calculate number of blocks written data and number of total blocks taken 
-	int usedSpace = disk[p].i_node->current_size = strlen(filecontent);
+	//then calculate number of blocks written data and number of total blocks taken
+	int usedSpace = 0;
+	if (disk[p].i_node != nullptr && filecontent != nullptr && strlen(filecontent) > 0) {
+		usedSpace = disk[p].i_node->current_size = strlen(filecontent);
+	}
 	disk[p].i_node->max_size = size;
-	int used_Blocks = (int)ceil((double) usedSpace / 1024);
+ 	int used_Blocks = (int)ceil((double)usedSpace / 1024);
 	int totalBlocks = (int)ceil(size / 1024);
 	int used_Blocks2 = used_Blocks;
 
 	int count = totalBlocks < 10 ? totalBlocks : 10; //write data into direct data block
 	int temp;
-	for (int i = 0; i < count; i++) 
+	for (int i = 0; i < count; i++)
 	{
 		temp = disk[Inode].i_node->direct_addr[i] = findFreeDataBlock();// find free data block as temp and load data
 		disk[3].data_bit_map->data_bit_map[temp - systemUsed] = true;
@@ -367,11 +373,11 @@ void createFile(int& p, char* filename, double size, char* filecontent)
 		if (used_Blocks > 0)
 		{
 			used_Blocks--;
-			strncpy(disk[temp].data->content, filecontent, 1024);
+			strncpy_s(disk[temp].data->content, filecontent, 1024);
 			filecontent += 1024;
 		}
 	}
-
+	cout << disk[temp].data->content << endl;//test if the file is successfully created
 	if (totalBlocks > 0) // data writing finished, but still needs to allocate data blocks
 	{
 		int new_p = findFreeDataBlock();
@@ -398,6 +404,5 @@ void createFile(int& p, char* filename, double size, char* filecontent)
 		}
 	}
 	filecontent -= used_Blocks2 * 1024;
-	// delete []filecontent;
+	//delete []filecontent;
 }
-
