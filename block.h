@@ -1,20 +1,12 @@
 #pragma once
-#pragma once
 #include<ctime>
+#include<string>
 #include<string.h>
+
 #ifndef  __BLOCK_H__ 
 #define __BLOCK_H__
 
-
-struct USER_INF {
-	char user_id[22];
-	char pass_word[20];
-};
-
 struct BOOT_BLOCK {
-	USER_INF user_inf[3];
-	int user_sum;
-	int current_user;
 };
 
 struct SUPER_BLOCK {
@@ -33,18 +25,12 @@ struct SUPER_BLOCK {
 
 struct I_NODE {
 	int uid;
-	int lock;//0 can be delete,1can;'t delete
-	int read_only_flag;//0 can be for read and wirte ,1 read only.
 	int type;//0 is directory ,1 is data;
 	time_t create_time;
-	time_t modification_time;
-	time_t access_time;
-	int current_size;
+	int current_size = 0;
 	int max_size;
 	int direct_addr[10];
 	int indirect_addr[2];
-	int shareDir;
-	int shareOffset;
 };
 
 struct DATA_BIT_MAP {
@@ -74,6 +60,21 @@ struct DIRECTORY_BLOCK
 	DIRECTORY directory[50];
 };
 
+struct DISK
+{
+	BOOT_BLOCK* boot_block;
+	SUPER_BLOCK* super_block;
+	INODE_BIT_MAP* i_node_bit_map;
+	DATA_BIT_MAP* data_bit_map;
+	I_NODE* i_node;
+
+	//three types of the data blocks
+	INDIRECT_ADDR_BLOCK* in_addr;
+	DATA_BLOCK* data;
+	DIRECTORY_BLOCK* Dire_Block;
+};
+extern DISK* disk;
+
 DIRECTORY_BLOCK* newDirectory();
 void format();
 
@@ -81,15 +82,15 @@ void createRootDirectory();
 
 int createDirectoryCheck(char dir[]);
 
-void checkAndCreateFile(const char* name, int size, char* filecontent);
+void checkAndCreateFile(const char* name, int size);
 
-void createFile(int& p, const char* token, double size, char* filecontent);
+void createFile(int& p, const char* token, double size);
 
 int findFile_INode(long p, char name[]);
 
 int findFreeINode();
 
-void make_Dir(long& p, char* token);
+int make_Dir(long& p, char* token);
 
 int findFreeDataBlock();
 
@@ -100,5 +101,31 @@ bool deleteFileHelp(int& p, int i);
 INDIRECT_ADDR_BLOCK* newINDIR_Addr();
 
 void make_inDir(INDIRECT_ADDR_BLOCK* p, char* filecontent, int& totalBlocks, int& used_Blocks);
+
+void cat(char* filename);
+
+void cmdF(bool& flag);
+
+int searchFile(char* filename);
+
+int searchDir(char* dir);
+
+void dirFix(char* dir);
+
+void deleteFile(char* name);
+
+bool deleteDir(char* dir);
+
+void sum();
+
+void cpyFile(char* obj, char* dest);
+
+void showhelp();
+
+void listFile(char* dir);
+
+void changeDir(char* dir);
+
+void save(DISK* disk);
 
 #endif
